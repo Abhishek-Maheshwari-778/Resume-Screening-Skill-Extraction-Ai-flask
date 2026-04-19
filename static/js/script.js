@@ -1,227 +1,183 @@
-// Global variables
-let uploadedFiles = {
+/**
+ * TalentFlow AI - High Throughput Logic
+ */
+
+let state = {
     resumes: [],
     jd: null,
-    skills: null
+    skills: null,
+    results: null
 };
 
-let analysisResults = null;
-
-// Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    setupEventListeners();
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    bindEvents();
+    setupSmoothScroll();
 });
 
-// Setup event listeners
-function setupEventListeners() {
-    // File inputs
+function initTheme() {
+    const theme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    const icon = document.querySelector('#themeToggle i');
+    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function bindEvents() {
     const resumeInput = document.getElementById('resumeFiles');
     const jdInput = document.getElementById('jdFile');
     const skillsInput = document.getElementById('skillsFile');
-    
+    const themeToggle = document.getElementById('themeToggle');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+
+    themeToggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        const icon = themeToggle.querySelector('i');
+        icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    });
+
     resumeInput.addEventListener('change', (e) => {
-        uploadedFiles.resumes = Array.from(e.target.files);
-        document.getElementById('resumeFilesList').textContent = `${uploadedFiles.resumes.length} resume(s) selected`;
-        updateAnalyzeButton();
+        state.resumes = Array.from(e.target.files);
+        document.getElementById('resumeList').innerText = `${state.resumes.length} Candidatures Attached`;
+        checkBtn();
     });
-    
+
     jdInput.addEventListener('change', (e) => {
-        uploadedFiles.jd = e.target.files[0];
-        document.getElementById('jdFileList').textContent = uploadedFiles.jd ? uploadedFiles.jd.name : '';
-        updateAnalyzeButton();
+        state.jd = e.target.files[0];
+        document.getElementById('jdFileName').innerText = state.jd.name;
+        checkBtn();
     });
-    
-    // Filters
-    document.getElementById('minScore').addEventListener('input', (e) => {
-        document.getElementById('minScoreValue').textContent = e.target.value + '%';
-        if (analysisResults) displayFilteredResults();
+
+    skillsInput.addEventListener('change', (e) => {
+        state.skills = e.target.files[0];
     });
-    
-    document.getElementById('topN').addEventListener('change', () => {
-        if (analysisResults) displayFilteredResults();
-    });
-    
-    document.getElementById('skillFilter').addEventListener('input', () => {
-        if (analysisResults) displayFilteredResults();
-    });
-    
-    // Analyze button
-    document.getElementById('analyzeBtn').addEventListener('click', analyzeResumes);
+
+    analyzeBtn.addEventListener('click', runInference);
 }
 
-function updateAnalyzeButton() {
-    const btn = document.getElementById('analyzeBtn');
-    btn.disabled = !(uploadedFiles.resumes.length > 0 && uploadedFiles.jd);
+function checkBtn() {
+    document.getElementById('analyzeBtn').disabled = !(state.resumes.length > 0 && state.jd);
 }
 
-async function analyzeResumes() {
-    const loadingSection = document.getElementById('loadingSection');
-    const resultsSection = document.getElementById('resultsSection');
+function setupSmoothScroll() {
+    document.querySelectorAll('.nav-link, .btn-cta').forEach(link => {
+        link.addEventListener('click', e => {
+            const href = link.getAttribute('href');
+            if (href.startsWith('#')) {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+    });
+}
+
+async function runInference() {
+    const loading = document.getElementById('loadingSection');
+    const results = document.getElementById('resultsSection');
     const btn = document.getElementById('analyzeBtn');
-    
-    loadingSection.style.display = 'block';
-    resultsSection.style.display = 'none';
-    btn.disabled = true;
-    
-    // Simulation for progress bar
-    let progress = 0;
+    const progress = document.getElementById('progressFill');
+
+    btn.style.display = 'none';
+    loading.style.display = 'block';
+    results.style.display = 'none';
+
+    let progressVal = 0;
     const interval = setInterval(() => {
-        progress += 5;
-        if (progress > 90) clearInterval(interval);
-        document.getElementById('progressFill').style.width = progress + '%';
-    }, 100);
+        progressVal += Math.random() * 20;
+        if (progressVal > 95) clearInterval(interval);
+        progress.style.width = Math.min(progressVal, 95) + '%';
+    }, 150);
 
     try {
         const formData = new FormData();
-        uploadedFiles.resumes.forEach(file => formData.append('resumes', file));
-        formData.append('jd', uploadedFiles.jd);
-        if (uploadedFiles.skills) formData.append('skills', uploadedFiles.skills);
+        state.resumes.forEach(f => formData.append('resumes', f));
+        formData.append('jd', state.jd);
+        if (state.skills) formData.append('skills', state.skills);
 
-        // Upload
         const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-        if (!uploadRes.ok) throw new Error('Upload failed');
+        if (!uploadRes.ok) throw new Error('Artifact upload critical failure');
         const uploadData = await uploadRes.json();
 
-        // Analyze
         const analyzeRes = await fetch('/api/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(uploadData)
         });
-        if (!analyzeRes.ok) throw new Error('Analysis failed');
+        if (!analyzeRes.ok) throw new Error('Inference engine timeout');
         
-        analysisResults = await analyzeRes.json();
+        state.results = await analyzeRes.json();
         
         clearInterval(interval);
-        document.getElementById('progressFill').style.width = '100%';
+        progress.style.width = '100%';
         
         setTimeout(() => {
-            displayResults();
-            loadingSection.style.display = 'none';
-            resultsSection.style.display = 'block';
-            btn.disabled = false;
+            renderInference();
+            loading.style.display = 'none';
+            results.style.display = 'block';
+            btn.style.display = 'block';
+            
+            window.scrollTo({
+                top: results.offsetTop - 120,
+                behavior: 'smooth'
+            });
         }, 500);
 
-    } catch (error) {
+    } catch (err) {
         clearInterval(interval);
-        console.error(error);
-        alert('Analysis Error: ' + error.message);
-        loadingSection.style.display = 'none';
-        btn.disabled = false;
+        alert('System Exception: ' + err.message);
+        loading.style.display = 'none';
+        btn.style.display = 'block';
     }
 }
 
-function displayResults() {
-    const jd = analysisResults.jd_details;
-    const jdMetrics = document.getElementById('jdMetrics');
-    jdMetrics.innerHTML = `
-        <div class="metric-card">
-            <div class="metric-value" style="font-size: 1.2rem;">${jd.titles.join(', ') || 'N/A'}</div>
-            <div class="metric-label">Roles Profiled</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value" style="font-size: 1.2rem;">${jd.experience || 'Not Specified'}</div>
-            <div class="metric-label">Experience Bracket</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value" style="font-size: 1.2rem;">${jd.education.join(', ') || 'Any'}</div>
-            <div class="metric-label">Education</div>
-        </div>
+function renderInference() {
+    const r = state.results;
+    
+    // Summary
+    const avg = r.candidates.length > 0 ? Math.round(r.candidates.reduce((a, b) => a + b.score, 0) / r.candidates.length) : 0;
+    document.getElementById('summaryGrid').innerHTML = `
+        <div class="about-card"><h4>PROCESS</h4><div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${r.total_resumes}</div><p>Artifacts</p></div>
+        <div class="about-card"><h4>MATCH</h4><div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${r.candidates.length > 0 ? r.candidates[0].score : 0}%</div><p>Max Fit</p></div>
+        <div class="about-card"><h4>SIGNAL</h4><div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${avg}%</div><p>Avg Quality</p></div>
+        <div class="about-card"><h4>STATUS</h4><div style="font-size: 2rem; font-weight: 800; color: var(--primary);">ACTIVE</div><p>Real-time</p></div>
     `;
 
-    const skillsBox = document.getElementById('jdSkillsBox');
-    const skillsTags = document.getElementById('jdSkillsTags');
-    const flatSkills = [].concat(...Object.values(jd.skills));
-    
-    if (flatSkills.length > 0) {
-        skillsTags.innerHTML = flatSkills.map(s => `<span class="tag tag-muted">${s}</span>`).join('');
-        skillsBox.style.display = 'block';
-    } else {
-        skillsBox.style.display = 'none';
-    }
-
-    displayFilteredResults();
-}
-
-function displayFilteredResults() {
-    let candidates = analysisResults.candidates;
-    const minScore = parseInt(document.getElementById('minScore').value);
-    const topN = document.getElementById('topN').value;
-    const highlightSkill = document.getElementById('skillFilter').value.toLowerCase();
-
-    // Filter
-    let filtered = candidates.filter(c => c.score >= minScore);
-    
-    if (highlightSkill) {
-        filtered = filtered.filter(c => {
-            const allSkills = [].concat(...Object.values(c.skills)).map(s => s.toLowerCase());
-            return allSkills.some(s => s.includes(highlightSkill));
-        });
-    }
-
-    if (topN !== 'all') {
-        filtered = filtered.slice(0, parseInt(topN));
-    }
-
-    // Summary Metrics
-    const metricsGrid = document.getElementById('summaryMetricsGrid');
-    const avgScore = filtered.length > 0 ? Math.round(filtered.reduce((a, b) => a + b.score, 0) / filtered.length) : 0;
-    
-    metricsGrid.innerHTML = `
-        <div class="metric-card">
-            <div class="metric-value">${analysisResults.total_resumes}</div>
-            <div class="metric-label">Processed</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">${filtered.length}</div>
-            <div class="metric-label">Shortlisted</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">${filtered.length > 0 ? filtered[0].score : 0}%</div>
-            <div class="metric-label">Top Match</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">${avgScore}%</div>
-            <div class="metric-label">Average Fit</div>
-        </div>
+    // JD Breakdown
+    const jd = r.jd_details;
+    document.getElementById('jdDetailsGrid').innerHTML = `
+        <div><label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">ROLES</label><div>${jd.titles.join(', ') || 'General'}</div></div>
+        <div><label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">EXP_REQ</label><div>${jd.experience || 'Flexible'}</div></div>
+        <div><label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">ACADEMICS</label><div>${jd.education[0] || 'Any'}</div></div>
     `;
 
-    // Cards
-    const container = document.getElementById('candidateCards');
-    container.innerHTML = filtered.map((c, i) => `
-        <div class="candidate-card animate-fade-in" style="animation-delay: ${i * 0.1}s">
-            <div class="candidate-score-badge">${c.score}%</div>
-            <div class="candidate-name">${c.name}</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
-                ${c.email} &nbsp;•&nbsp; ${c.phone}
+    // Candidate List
+    document.getElementById('candidateList').innerHTML = r.candidates.map((c, i) => `
+        <div class="result-card animate" style="animation-delay: ${i * 0.1}s">
+            <div class="score-text">${c.score}%</div>
+            <h4>${c.name}</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">${c.email} &nbsp;|&nbsp; ${c.phone}</p>
+            <p style="margin: 16px 0; color: var(--primary); font-weight: 700; font-style: italic;">"${c.summary}"</p>
+            <div style="height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 20px;">
+                <div style="width: ${c.score}%; height: 100%; background: var(--primary);"></div>
             </div>
-            <div style="font-style: italic; color: var(--primary); font-size: 0.9rem; margin-bottom: 16px;">
-                "${c.summary}"
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; font-size: 0.8rem; margin-bottom: 20px;">
+                <div><label style="color: var(--text-muted); display: block;">SIGNAL</label>${c.experience}</div>
+                <div><label style="color: var(--text-muted); display: block;">ALIGNED</label>${c.titles[0] || 'N/A'}</div>
+                <div><label style="color: var(--text-muted); display: block;">DEGREE</label>${c.education[0] || 'N/A'}</div>
             </div>
-            <div class="progress-container">
-                <div class="progress-bar" style="width: ${c.score}%"></div>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; font-size: 0.8rem;">
-                <div>
-                    <span style="display: block; color: var(--text-muted);">EXPERIENCE</span>
-                    <span>${c.experience}</span>
-                </div>
-                <div>
-                    <span style="display: block; color: var(--text-muted);">ROLE FIT</span>
-                    <span>${c.titles.slice(0, 1) || 'Qualified'}</span>
-                </div>
-                <div>
-                    <span style="display: block; color: var(--text-muted);">EDUCATION</span>
-                    <span>${c.education[0] || 'Specified'}</span>
-                </div>
-            </div>
-            <div style="margin-top: 20px;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">MATCHED STRENGTHS</div>
-                <div>${c.matched_skills.map(s => `<span class="tag tag-success">${s}</span>`).join('')}</div>
-                ${c.missing_skills.length > 0 ? `
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; margin-bottom: 8px;">IDENTIFIED GAPS</div>
-                    <div>${c.missing_skills.slice(0, 10).map(s => `<span class="tag tag-danger">${s}</span>`).join('')}</div>
-                ` : ''}
+            <div>
+                <label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">SYNCED_SKILLS</label>
+                <div>${c.matched_skills.map(s => `<span class="tag tag-match">${s}</span>`).join('')}</div>
+                ${c.missing_skills.length > 0 ? `<label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted); margin-top: 12px; display: block;">GAP_DETECTED</label>
+                <div>${c.missing_skills.slice(0, 5).map(s => `<span class="tag tag-miss">${s}</span>`).join('')}</div>` : ''}
             </div>
         </div>
     `).join('');
