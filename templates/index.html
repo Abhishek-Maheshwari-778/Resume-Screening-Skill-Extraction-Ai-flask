@@ -3,11 +3,16 @@
 {% block title %}TalentFlow AI | Home{% endblock %}
 
 {% block content %}
-<section class="hero" id="hero">
-    <div class="hero-container" style="display: flex; align-items: center; justify-content: center; max-width: 1200px; margin: 0 auto; gap: 50px; flex-wrap: wrap;">
+<section class="hero" id="hero" style="overflow: hidden; position: relative;">
+    <!-- Animated Background Particles -->
+    <div class="particles-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+        <div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div>
+    </div>
+
+    <div class="hero-container" style="display: flex; align-items: center; justify-content: center; max-width: 1200px; margin: 0 auto; gap: 50px; flex-wrap: wrap; position: relative; z-index: 2;">
         <div class="animate" style="flex: 1; min-width: 340px; text-align: left;">
-            <h1 style="background: linear-gradient(to bottom, var(--text-main), var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: left;">Recruitment,<br>Accelerated.</h1>
-            <p style="text-align: left; margin-left: 0; max-width: 500px;">Our AI-powered engine parses resumes, extracts deep skills, and matches candidates to mandates with surgical precision.</p>
+            <h1 style="color: var(--text-main); text-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: left; font-size: 5.5rem;">Recruitment,<br><span style="color: var(--primary);">Accelerated.</span></h1>
+            <p style="text-align: left; margin-left: 0; max-width: 500px; font-weight: 500; font-size: 1.3rem;">Our AI-powered engine parses resumes, extracts deep skills, and matches candidates to mandates with surgical precision.</p>
             <div style="display: flex; gap: 20px; justify-content: flex-start;">
                 <a href="{{ url_for('analyze') }}" class="btn-cta">Start Analyzing</a>
                 <a href="{{ url_for('about') }}" class="btn-cta" style="background: var(--bg-secondary); border: 1px solid var(--border); box-shadow: none; color: var(--text-main);">Learn More</a>
@@ -27,6 +32,20 @@
         </div>
     </div>
 </section>
+
+<style>
+    .particle { position: absolute; background: var(--primary); border-radius: 50%; opacity: 0.1; filter: blur(5px); animation: floatParticle 20s infinite linear; }
+    .p1 { width: 100px; height: 100px; top: 10%; left: 10%; animation-duration: 25s; }
+    .p2 { width: 150px; height: 150px; bottom: 10%; right: 10%; animation-duration: 35s; background: var(--secondary); }
+    .p3 { width: 80px; height: 80px; top: 50%; left: 80%; animation-duration: 45s; }
+
+    @keyframes floatParticle {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        33% { transform: translate(30px, 50px) rotate(120deg); }
+        66% { transform: translate(-20px, 20px) rotate(240deg); }
+        100% { transform: translate(0, 0) rotate(360deg); }
+    }
+
 
 <style>
     .ai-core-system {

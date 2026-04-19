@@ -4,9 +4,11 @@
 
 {% block content %}
 <section class="app-section" id="analyze" style="padding-top: 140px;">
-    <div class="dashboard-card animate" style="max-width: 1400px; margin: 0 auto;">
+    <div class="dashboard-card animate dashboard-visual-bg" style="max-width: 1400px; margin: 0 auto; position: relative; overflow: hidden;">
+        <!-- Technical Scanning Line -->
+        <div class="scan-line"></div>
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 30px; position: relative; z-index: 2;">
             <div>
                 <h2 style="font-size: 2.2rem; font-weight: 900; letter-spacing: -1.5px;">Intelligence Engine</h2>
                 <div style="display: flex; gap: 15px; margin-top: 10px;">
@@ -98,9 +100,31 @@
 </section>
 
 <style>
-    .tab-btn { background: none; border: 1px solid var(--border); padding: 8px 20px; border-radius: 99px; color: var(--text-muted); cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+    .tab-btn { background: none; border: 1px solid var(--border); padding: 8px 20px; border-radius: 99px; color: var(--text-muted); cursor: pointer; transition: 0.2s; font-size: 0.8rem; position: relative; z-index: 5; }
     .tab-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(16, 185, 129, 0.1); }
     
+    .dashboard-visual-bg {
+        background-image: radial-gradient(var(--border) 1px, transparent 1px);
+        background-size: 30px 30px;
+    }
+    
+    .scan-line {
+        position: absolute;
+        top: -100px;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background: linear-gradient(to bottom, transparent, rgba(16, 185, 129, 0.1), transparent);
+        animation: scanMove 8s linear infinite;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    @keyframes scanMove {
+        0% { top: -100px; }
+        100% { top: 120%; }
+    }
+
     .filter-chip { background: var(--bg-accent); border: 1px solid var(--border); padding: 10px 20px; border-radius: 12px; color: var(--text-main); cursor: pointer; transition: 0.2s; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
     .filter-chip.active { border-color: var(--primary); background: rgba(16, 185, 129, 0.1); }
 
