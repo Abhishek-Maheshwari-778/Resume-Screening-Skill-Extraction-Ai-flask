@@ -5,11 +5,11 @@
 {% block content %}
 <section class="hero" id="hero">
     <div class="animate">
-        <h1 style="background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Recruitment,<br>Accelerated.</h1>
+        <h1 style="background: linear-gradient(to bottom, var(--text-main), var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Recruitment,<br>Accelerated.</h1>
         <p>Our AI-powered engine parses resumes, extracts deep skills, and matches candidates to mandates with surgical precision.</p>
         <div style="display: flex; gap: 20px; justify-content: center;">
             <a href="{{ url_for('analyze') }}" class="btn-cta">Start Analyzing</a>
-            <a href="{{ url_for('about') }}" class="btn-cta" style="background: var(--bg-accent); border: 1px solid var(--border); box-shadow: none;">Learn More</a>
+            <a href="{{ url_for('about') }}" class="btn-cta" style="background: var(--bg-secondary); border: 1px solid var(--border); box-shadow: none; color: var(--text-main);">Learn More</a>
         </div>
     </div>
 </section>
