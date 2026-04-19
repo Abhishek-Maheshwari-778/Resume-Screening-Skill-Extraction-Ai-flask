@@ -3,17 +3,33 @@
 An advanced AI-powered platform designed to streamline recruitment by automatically screening resumes and extracting key technical and soft skills using NLP (Natural Language Processing) and NER (Named Entity Recognition).
 
 ## 🚀 Features
-- **Intelligent Screening**: Ranks candidates against a Job Description using a hybrid TF-IDF Cosine Similarity and Keyword Matching algorithm.
+- **Intelligent Screening**: Ranks candidates against a Job Description using a custom-built, lightweight TF-IDF Cosine Similarity and Keyword Matching algorithm.
 - **Skill Extraction**: Automatically identifies and categorizes technical skills, soft skills, and tool proficiencies.
 - **Dual Format Support**: Processes both PDF and DOCX resumes seamlessly.
 - **Interactive Dashboard**: Premium glassmorphism UI with real-time filtering, match scoring visualizations, and candidate comparisons.
 - **Custom Catalogs**: Support for custom skills catalogs via XLSX for industry-specific tailoring.
 
+## 🧠 System Architecture
+
+```mermaid
+graph TD;
+    A[Upload Resumes PDF/DOCX] --> B[Text Parser];
+    C[Upload Job Description] --> B;
+    B --> D[NLP Skill & Entity Extractor];
+    D --> E[Fallback NER Engine];
+    D --> F[Skill Catalog Matching];
+    E --> G[Data Aggregation];
+    F --> G;
+    G --> H[Pure-Python TF-IDF & Cosine Similarity];
+    H --> I[Ranking & Scoring];
+    I --> J[Matrix UI & Results Dashboard];
+```
+
 ## 🛠️ Technology Stack
 - **Backend**: Flask (Python 3.x)
-- **NLP Engine**: spaCy, en_core_web_sm
 - **Text Extraction**: pypdf, python-docx
-- **Machine Learning**: Scikit-Learn (TF-IDF), Pandas
+- **Machine Learning**: Custom Pure-Python Vector Math Algorithms
+- **Data Processing**: openpyxl
 - **Frontend**: Vanilla HTML5, CSS3 (Premium Glassmorphism), Modern JavaScript (ES6+)
 
 ## 📦 Installation & Setup
