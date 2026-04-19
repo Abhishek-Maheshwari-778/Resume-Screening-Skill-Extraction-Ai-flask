@@ -25,6 +25,14 @@ graph TD;
     I --> J[Matrix UI & Results Dashboard];
 ```
 
+## 🛠️ How It Works
+
+1.  **Ingestion Engine**: The platform accepts multi-format resume artifacts (PDF/DOCX). It uses `pypdf` and `python-docx` for loss-less text extraction.
+2.  **Semantic Extractor**: Our lightweight NLP pipeline identifies entities like `Name`, `Email`, `Phone`, and `Education`. It cross-references text against a pre-defined and custom skill catalog.
+3.  **Vector Matcher**: Instead of simple keyword counting, it converts both the resume and the job description into numerical vectors.
+4.  **Hybrid Scoring**: It calculates similarity using **TF-IDF** (Term Frequency-Inverse Document Frequency) and **Cosine Similarity**, weighted alongside direct keyword overlap to produce an accuracy percentage.
+5.  **Intelligence Dashboard**: Results are streamed to a high-performance glassmorphism UI, featuring interactive charts (Chart.js) and a skill comparison matrix.
+
 ## 🛠️ Technology Stack
 - **Backend**: Flask (Python 3.x)
 - **Text Extraction**: pypdf, python-docx
