@@ -1,0 +1,8 @@
+flask
+pandas
+spacy
+pypdf
+python-docx
+scikit-learn
+openpyxl
+werkzeug

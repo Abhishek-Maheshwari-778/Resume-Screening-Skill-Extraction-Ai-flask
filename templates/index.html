@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Sorter | Next-Gen Hiring</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="AI-powered tool for automated resume screening and skill extraction using NLP and NER.">
+    <meta name="keywords" content="Resume Screening, AI Recruitment, Skill Extraction, NLP, NER, Hiring Tool">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="project-icon">🚀</div>
+                <h2 class="project-title">AI Resume Sorter</h2>
+                <p class="project-subtitle">Strategic Talent Intelligence</p>
+                <div class="project-badge">Enterprise Edition</div>
+            </div>
+            
+            <div class="filters-section">
+                <!-- Filter Section content will be populated or stay as is with better styling -->
+                <div style="margin-bottom: 24px;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 8px;">MINIMUM MATCH SCORE</label>
+                    <input type="range" id="minScore" min="0" max="100" value="10" step="5" style="width: 100%;">
+                    <span id="minScoreValue" style="font-size: 0.85rem; color: var(--primary); font-weight: 600;">10%</span>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 8px;">TOP CANDIDATES</label>
+                    <select id="topN" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); color: var(--text-main);">
+                        <option value="5">Show Top 5</option>
+                        <option value="10" selected>Show Top 10</option>
+                        <option value="all">Show All</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 8px;">HIGHLIGHT SKILL</label>
+                    <input type="text" id="skillFilter" placeholder="e.g. Python" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); color: var(--text-main);">
+                </div>
+            </div>
+
+            <!-- Owner Avatar - As requested by user -->
+            <div class="owner-section">
+                <div class="owner-card">
+                    <div class="owner-avatar">AM</div>
+                    <div class="owner-info">
+                        <div class="owner-name">Abhishek Maheshwari</div>
+                        <div class="owner-role">Project Lead & AI Developer</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header animate-fade-in">
+                <h1>Hiring Intelligence Hub</h1>
+                <p>Upload resumes and job descriptions to find your perfect match with AI precision.</p>
+            </header>
+
+            <!-- Dashboard Grid -->
+            <div class="glass-card animate-fade-in">
+                <div class="upload-grid">
+                    <div class="upload-column">
+                        <h3>Candidate Portfolios</h3>
+                        <div class="upload-area" id="resumeUploadArea">
+                            <input type="file" id="resumeFiles" multiple accept=".pdf,.docx">
+                            <div class="upload-icon">📥</div>
+                            <p>Drop Resumes (PDF/DOCX)</p>
+                            <p class="upload-hint">Bulk selection supported</p>
+                        </div>
+                        <div id="resumeFilesList" style="margin-top: 12px; font-size: 0.8rem; color: var(--primary);"></div>
+                    </div>
+                    
+                    <div class="upload-column">
+                        <h3>Job Mandate</h3>
+                        <div class="upload-area" id="jdUploadArea">
+                            <input type="file" id="jdFile" accept=".pdf,.docx,.txt">
+                            <div class="upload-icon">📝</div>
+                            <p>Drop Job Description</p>
+                        </div>
+                        <div id="jdFileList" style="margin-top: 12px; font-size: 0.8rem; color: var(--primary);"></div>
+                        
+                        <div style="margin-top: 20px;">
+                            <h3 style="font-size: 0.8rem; margin-bottom: 8px;">Custom Skills Catalog (Optional)</h3>
+                            <input type="file" id="skillsFile" accept=".xlsx" style="font-size: 0.75rem;">
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="analyzeBtn" class="btn-primary" disabled>Initiate AI Screening</button>
+            </div>
+
+            <!-- Results Visualization -->
+            <section id="resultsSection" style="display: none; margin-top: 40px;">
+                <div class="section-title">Foundational Metrics</div>
+                <div class="metrics-grid" id="summaryMetricsGrid"></div>
+
+                <div id="jdBreakdown" class="glass-card" style="margin-bottom: 32px;">
+                    <h2 style="font-size: 1.25rem; margin-bottom: 20px;">Mandate Analysis</h2>
+                    <div class="metrics-grid" id="jdMetrics" style="grid-template-columns: repeat(3, 1fr);"></div>
+                    <div id="jdSkillsBox" style="display: none; border-top: 1px solid var(--border); padding-top: 20px;">
+                        <h4 style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;">Pre-requisite Skills</h4>
+                        <div id="jdSkillsTags"></div>
+                    </div>
+                </div>
+
+                <div class="section-title">Top Ranked Talent</div>
+                <div id="candidateCards"></div>
+            </section>
+
+            <!-- Loading State -->
+            <div id="loadingSection" style="display: none; text-align: center; margin-top: 50px;">
+                <div class="upload-icon" style="animation: bounce 1s infinite;">⌛</div>
+                <p>Decoding talent profiles...</p>
+                <div class="progress-container" style="width: 300px; margin: 20px auto;">
+                    <div class="progress-bar" id="progressFill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer style="margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted);">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--bg-main); font-size: 1.2rem;">AM</div>
+                    <div style="text-align: left;">
+                        <div style="color: var(--text-main); font-weight: 700;">Abhishek Maheshwari</div>
+                        <div style="font-size: 0.8rem;">Project Architect & Chief Developer</div>
+                    </div>
+                </div>
+                <p style="font-size: 0.8rem;">&copy; 2026 AI Resume Intelligence Platform. Built with Passion & Precision.</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <style>
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 40px 0 20px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+        }
+    </style>
+</body>
+</html>
