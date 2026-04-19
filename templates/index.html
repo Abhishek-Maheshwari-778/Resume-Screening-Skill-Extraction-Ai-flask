@@ -1,140 +1,40 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TalentFlow AI | Frontier Career Intelligence</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Chart.js for premium visuals -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <nav>
-        <div class="nav-logo">TALENTFLOW AI</div>
-        <div class="nav-links">
-            <a href="#hero" class="nav-link">Home</a>
-            <a href="#analyze" class="nav-link">Engine</a>
-            <a href="#about" class="nav-link">About</a>
-            <a href="#owner" class="nav-link">Developer</a>
-            <button id="themeToggle" class="theme-btn"><i class="fas fa-moon"></i></button>
+{% block title %}TalentFlow AI | Home{% endblock %}
+
+{% block content %}
+<section class="hero" id="hero">
+    <div class="animate">
+        <h1 style="background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Recruitment,<br>Accelerated.</h1>
+        <p>Our AI-powered engine parses resumes, extracts deep skills, and matches candidates to mandates with surgical precision.</p>
+        <div style="display: flex; gap: 20px; justify-content: center;">
+            <a href="{{ url_for('analyze') }}" class="btn-cta">Start Analyzing</a>
+            <a href="{{ url_for('about') }}" class="btn-cta" style="background: var(--bg-accent); border: 1px solid var(--border); box-shadow: none;">Learn More</a>
         </div>
-    </nav>
+    </div>
+</section>
 
-    <!-- Hero -->
-    <section class="hero" id="hero">
-        <div class="animate">
-            <h1 style="background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Recruitment,<br>Accelerated.</h1>
-            <p>Our AI-powered engine parses resumes, extracts deep skills, and matches candidates to mandates with surgical precision.</p>
-            <a href="#analyze" class="btn-cta">Start Analyzing</a>
+<section class="about-section" style="min-height: auto; padding-top: 50px;">
+    <div class="section-head animate">
+        <h2>Intelligent Screening</h2>
+        <p>A specialized AI ecosystem designed for high-throughput recruitment environments.</p>
+    </div>
+    <div class="about-grid">
+        <div class="about-card">
+            <span class="icon">🔍</span>
+            <h3>Precise Parsing</h3>
+            <p>Handles complex PDF and DOCX structures to extract text without data loss.</p>
         </div>
-    </section>
-
-    <!-- Engine / Dashboard -->
-    <section class="app-section" id="analyze" style="min-height: auto; padding-top: 120px; padding-bottom: 120px;">
-        <div class="dashboard-card animate">
-            <div class="section-head" style="margin-bottom: 40px; text-align: left;">
-                <h2 style="font-size: 2rem;">Analysis Engine</h2>
-                <p>Upload your candidate artifacts and job mandate to begin.</p>
-            </div>
-
-            <div class="upload-grid">
-                <div class="upload-box">
-                    <input type="file" id="resumeFiles" multiple accept=".pdf,.docx">
-                    <span class="icon">📁</span>
-                    <h3>Candidate Resumes</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">PDF or DOCX (Batch upload supported)</p>
-                    <div id="resumeList" style="margin-top: 10px; color: var(--primary); font-weight: 700;"></div>
-                </div>
-                <div class="upload-box">
-                    <input type="file" id="jdFile" accept=".pdf,.docx,.txt">
-                    <span class="icon">📄</span>
-                    <h3>Job Mandate</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Upload PDF, DOCX, or TXT</p>
-                    <div id="jdFileName" style="margin-top: 10px; color: var(--primary); font-weight: 700;"></div>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 32px;">
-                <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Custom Skill Inventory (Optional XLSX)</label>
-                <input type="file" id="skillsFile" accept=".xlsx" style="display: block; width: 100%; margin-top: 8px;">
-            </div>
-
-            <button id="analyzeBtn" disabled>ACTIVATE ENGINE</button>
-
-            <!-- Loading UI -->
-            <div id="loadingSection" style="display: none; text-align: center; padding-top: 40px;">
-                <div class="icon" style="animation: spin 2s linear infinite;">⚙️</div>
-                <h3>Processing Mandate...</h3>
-                <div style="width: 100%; height: 4px; background: var(--border); border-radius: 99px; margin-top: 20px; overflow: hidden;">
-                    <div id="progressFill" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s;"></div>
-                </div>
-            </div>
-
-            <!-- Results -->
-            <div id="resultsSection" style="display: none; margin-top: 60px;">
-                <div id="summaryGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 48px;"></div>
-                
-                <div id="jdBreakdown" style="background: var(--bg-accent); padding: 32px; border-radius: 24px; margin-bottom: 48px;">
-                    <h3 style="margin-bottom: 24px;">Mandate Insights</h3>
-                    <div id="jdDetailsGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;"></div>
-                </div>
-
-                <h3>Talent Ranking</h3>
-                <div id="candidateList"></div>
-            </div>
+        <div class="about-card">
+            <span class="icon">🎯</span>
+            <h3>NER Tagging</h3>
+            <p>Automatically identifies names, emails, and roles using Named Entity Recognition.</p>
         </div>
-    </section>
-
-    <!-- About Section - Separate "alg alg" as requested -->
-    <section class="about-section" id="about">
-        <div class="section-head animate">
-            <h2>The Technology</h2>
-            <p>Built with enterprise-ready NLP patterns and high-throughput logic.</p>
+        <div class="about-card">
+            <span class="icon">⚡</span>
+            <h3>Smart Score</h3>
+            <p>Hybrid similarity algorithms ensure the most qualified talent is prioritized.</p>
         </div>
-        <div class="about-grid">
-            <div class="about-card animate">
-                <span class="icon">🧠</span>
-                <h3>NLP Core</h3>
-                <p>Utilizes spaCy for Deep Entity Recognition to distinguish between names, roles, and education with 98% accuracy.</p>
-            </div>
-            <div class="about-card animate">
-                <span class="icon">📊</span>
-                <h3>Vector Match</h3>
-                <p>Hybrid TF-IDF model that calculates cosine similarity between resume vectors and job mandates for perfect alignment.</p>
-            </div>
-            <div class="about-card animate">
-                <span class="icon">⚡</span>
-                <h3>Real-time Extraction</h3>
-                <p>Optimized parsing engine capable of processing massive document sets in parallel for instant feedback.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Owner Section -->
-    <section id="owner" style="background: var(--bg-main);">
-        <div class="avatar-large animate">AM</div>
-        <div class="section-head animate">
-            <h2 style="font-size: 2.5rem;">Abhishek Maheshwari</h2>
-            <p>Visionary AI Developer & System Architect</p>
-            <div style="display: flex; gap: 20px; justify-content: center; margin-top: 32px;">
-                <a href="https://github.com/Abhishek-Maheshwari-778" target="_blank" style="color: var(--text-main); font-size: 1.5rem;"><i class="fab fa-github"></i></a>
-                <a href="https://www.linkedin.com/in/abhishekmaheshwari2436/" target="_blank" style="color: var(--secondary); font-size: 1.5rem;"><i class="fab fa-linkedin"></i></a>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <p style="font-weight: 800; color: var(--text-main);">TALENTFLOW AI v2.0</p>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">&copy; 2026 Abhishek Maheshwari. All Rights Reserved.</p>
-    </footer>
-
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <style>
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    </style>
-</body>
-</html>
+    </div>
+</section>
+{% endblock %}

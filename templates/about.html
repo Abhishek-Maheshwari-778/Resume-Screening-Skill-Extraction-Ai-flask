@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}TalentFlow AI | Technical Architecture{% endblock %}
+
+{% block content %}
+<section style="padding: 160px 8% 100px;">
+    <div class="section-head animate">
+        <h1 style="font-size: 4rem; font-weight: 900; letter-spacing: -2px;">System Architecture</h1>
+        <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 750px; margin: 20px auto;">A deep dive into the high-throughput NLP pipelines and vector embedding matchers powering TalentFlow.</p>
+    </div>
+
+    <!-- The Chart / Flow (Premium CSS Version) -->
+    <div class="dashboard-card animate" style="margin-bottom: 80px; padding: 60px 40px;">
+        <h3 style="text-align: center; margin-bottom: 60px; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px;">Data Pipeline Infrastructure</h3>
+        
+        <div class="flow-container">
+            <div class="flow-step">
+                <div class="flow-icon">📥</div>
+                <div class="flow-text">
+                    <h4>Ingestion</h4>
+                    <p>PDF / DOCX Artifacts</p>
+                </div>
+            </div>
+            <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="flow-step">
+                <div class="flow-icon">⚙️</div>
+                <div class="flow-text">
+                    <h4>Extraction</h4>
+                    <p>NLP / NER Parsing</p>
+                </div>
+            </div>
+            <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="flow-step">
+                <div class="flow-icon">🧬</div>
+                <div class="flow-text">
+                    <h4>Alignment</h4>
+                    <p>Vector Match Engine</p>
+                </div>
+            </div>
+            <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="flow-step" style="border-color: var(--primary);">
+                <div class="flow-icon" style="color: var(--primary);">🎯</div>
+                <div class="flow-text">
+                    <h4>Inference</h4>
+                    <p>Ranked Talent Signal</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-grid">
+        <div class="about-card animate">
+             <h3 style="color: var(--primary); margin-bottom: 20px;">01. NLP Core</h3>
+             <p style="color: var(--text-muted);">Built on <b>spaCy</b>, our engine utilizes specialized Named Entity Recognition models to distinguish between professional experiences, academic degrees, and individual identifiers with surgical accuracy.</p>
+        </div>
+        <div class="about-card animate">
+             <h3 style="color: var(--primary); margin-bottom: 20px;">02. Vector Match</h3>
+             <p style="color: var(--text-muted);">Processes textual data into high-dimensional vectors. Matches are calculated using <b>TF-IDF</b> and <b>Cosine Similarity</b> to ensure that candidates aren't just matching keywords, but semantic intent.</p>
+        </div>
+        <div class="about-card animate">
+             <h3 style="color: var(--primary); margin-bottom: 20px;">03. High Throughput</h3>
+             <p style="color: var(--text-muted);">Optimized <b>Flask</b> architecture allows for parallel processing of massive resume datasets, providing real-time matrix comparisons for recruitment mandates.</p>
+        </div>
+    </div>
+
+    <div class="dashboard-card animate" style="margin-top: 60px;">
+        <h3 style="margin-bottom: 25px;">The Tech Stack</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+            <span class="tag tag-match" style="font-size: 0.9rem; padding: 8px 16px;">Python 3.1x</span>
+            <span class="tag tag-match" style="font-size: 0.9rem; padding: 8px 16px;">Flask Framework</span>
+            <span class="tag tag-match" style="font-size: 0.9rem; padding: 8px 16px;">spaCy NLP</span>
+            <span class="tag tag-match" style="font-size: 0.9rem; padding: 8px 16px;">Scikit-learn</span>
+            <span class="tag tag-match" style="font-size: 0.9rem; padding: 8px 16px;">Pandas Intelligence</span>
+            <span class="tag tag-match" style="font-size: 0.9rem; padding: 8px 16px;">Vector Mathematics</span>
+            <span class="tag tag-match" style="font-size: 0.9rem; padding: 8px 16px;">Glassmorphism UI</span>
+        </div>
+    </div>
+</section>
+
+<style>
+    .flow-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1000px;
+        margin: 0 auto;
+        position: relative;
+    }
+    .flow-step {
+        flex: 1;
+        background: var(--bg-main);
+        border: 2px solid var(--border);
+        border-radius: 24px;
+        padding: 25px 20px;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        transition: 0.3s;
+    }
+    .flow-step:hover { border-color: var(--primary); transform: translateY(-5px); }
+    .flow-icon { font-size: 2.2rem; margin-bottom: 15px; }
+    .flow-text h4 { font-size: 1.1rem; font-weight: 800; margin-bottom: 5px; }
+    .flow-text p { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+    .flow-arrow { flex: 0.5; text-align: center; color: var(--border); font-size: 1.2rem; }
+</style>
+{% endblock %}

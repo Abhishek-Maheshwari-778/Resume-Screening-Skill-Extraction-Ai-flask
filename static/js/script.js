@@ -1,12 +1,16 @@
 /**
- * TalentFlow AI - High Throughput Logic
+ * TalentFlow AI - Intelligence Engine v2.2
+ * Core Features: Multi-mode analysis, Matrix comparisons, and Sorting
  */
 
 let state = {
     resumes: [],
     jd: null,
     skills: null,
-    results: null
+    results: null,
+    chart: null,
+    mode: 'recruiter', // or 'candidate'
+    sortOrder: 'desc'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,166 +23,289 @@ function initTheme() {
     const theme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', theme);
     const icon = document.querySelector('#themeToggle i');
-    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    if(icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 }
 
 function bindEvents() {
-    const resumeInput = document.getElementById('resumeFiles');
-    const jdInput = document.getElementById('jdFile');
-    const skillsInput = document.getElementById('skillsFile');
-    const themeToggle = document.getElementById('themeToggle');
-    const analyzeBtn = document.getElementById('analyzeBtn');
+    // Mode Switchers
+    const btnRecruiter = document.getElementById('recruiterMode');
+    const btnCandidate = document.getElementById('candidateMode');
+    const jdBox = document.getElementById('jdBoxContainer');
 
-    themeToggle.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme');
-        const next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        const icon = themeToggle.querySelector('i');
-        icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    });
-
-    resumeInput.addEventListener('change', (e) => {
-        state.resumes = Array.from(e.target.files);
-        document.getElementById('resumeList').innerText = `${state.resumes.length} Candidatures Attached`;
+    btnRecruiter?.addEventListener('click', () => {
+        state.mode = 'recruiter';
+        btnRecruiter.classList.add('active');
+        btnCandidate.classList.remove('active');
+        jdBox.style.display = 'block';
         checkBtn();
     });
 
-    jdInput.addEventListener('change', (e) => {
+    btnCandidate?.addEventListener('click', () => {
+        state.mode = 'candidate';
+        btnCandidate.classList.add('active');
+        btnRecruiter.classList.remove('active');
+        jdBox.style.display = 'none';
+        checkBtn();
+    });
+
+    // File Inputs
+    const resumeInput = document.getElementById('resumeFiles');
+    const jdInput = document.getElementById('jdFile');
+    const skillsInput = document.getElementById('skillsFile');
+
+    resumeInput?.addEventListener('change', (e) => {
+        state.resumes = Array.from(e.target.files);
+        document.getElementById('resumeList').innerText = `${state.resumes.length} Files Prepared`;
+        checkBtn();
+    });
+
+    jdInput?.addEventListener('change', (e) => {
         state.jd = e.target.files[0];
         document.getElementById('jdFileName').innerText = state.jd.name;
         checkBtn();
     });
 
-    skillsInput.addEventListener('change', (e) => {
+    skillsInput?.addEventListener('change', (e) => {
         state.skills = e.target.files[0];
+        document.getElementById('skillsFileName').innerText = state.skills.name;
     });
 
-    analyzeBtn.addEventListener('click', runInference);
+    // Buttons
+    document.getElementById('analyzeBtn')?.addEventListener('click', runInference);
+    document.getElementById('resetBtn')?.addEventListener('click', resetApp);
+    document.getElementById('sortAccuracy')?.addEventListener('click', toggleSort);
+    document.getElementById('toggleTable')?.addEventListener('click', toggleView('matrixContainer'));
+    document.getElementById('toggleCharts')?.addEventListener('click', toggleView('chartsContainer'));
+    document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    document.querySelector('#themeToggle i').className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    if (state.results) renderSignalChart();
+}
+
+function toggleView(id) {
+    return (e) => {
+        const el = document.getElementById(id);
+        const isActive = el.style.display !== 'none';
+        el.style.display = isActive ? 'none' : 'block';
+        e.currentTarget.classList.toggle('active');
+    };
+}
+
+function toggleSort() {
+    state.sortOrder = state.sortOrder === 'desc' ? 'asc' : 'desc';
+    renderCandidateList();
+    document.getElementById('sortAccuracy').innerHTML = `Sort: Accuracy <i class="fas fa-sort-amount-${state.sortOrder === 'desc' ? 'down' : 'up'}"></i>`;
 }
 
 function checkBtn() {
-    document.getElementById('analyzeBtn').disabled = !(state.resumes.length > 0 && state.jd);
-}
-
-function setupSmoothScroll() {
-    document.querySelectorAll('.nav-link, .btn-cta').forEach(link => {
-        link.addEventListener('click', e => {
-            const href = link.getAttribute('href');
-            if (href.startsWith('#')) {
-                e.preventDefault();
-                const target = document.querySelector(href);
-                if (target) {
-                    window.scrollTo({
-                        top: target.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
-                }
-            }
-        });
-    });
+    const btn = document.getElementById('analyzeBtn');
+    if (!btn) return;
+    if (state.mode === 'recruiter') {
+        btn.disabled = !(state.resumes.length > 0 && state.jd);
+    } else {
+        btn.disabled = !(state.resumes.length > 0);
+    }
 }
 
 async function runInference() {
     const loading = document.getElementById('loadingSection');
-    const results = document.getElementById('resultsSection');
+    const resultsArea = document.getElementById('resultsSection');
+    const workspace = document.getElementById('uploadWorkspace');
     const btn = document.getElementById('analyzeBtn');
     const progress = document.getElementById('progressFill');
 
     btn.style.display = 'none';
     loading.style.display = 'block';
-    results.style.display = 'none';
+    workspace.style.opacity = '0.3';
 
-    let progressVal = 0;
+    let pVal = 0;
     const interval = setInterval(() => {
-        progressVal += Math.random() * 20;
-        if (progressVal > 95) clearInterval(interval);
-        progress.style.width = Math.min(progressVal, 95) + '%';
+        pVal += 10;
+        if (pVal > 90) clearInterval(interval);
+        progress.style.width = pVal + '%';
     }, 150);
 
     try {
         const formData = new FormData();
         state.resumes.forEach(f => formData.append('resumes', f));
-        formData.append('jd', state.jd);
+        if (state.mode === 'recruiter') formData.append('jd', state.jd);
         if (state.skills) formData.append('skills', state.skills);
 
-        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-        if (!uploadRes.ok) throw new Error('Artifact upload critical failure');
-        const uploadData = await uploadRes.json();
+        // Upload
+        const up = await fetch('/api/upload', { method: 'POST', body: formData });
+        const upData = await up.json();
 
-        const analyzeRes = await fetch('/api/analyze', {
+        // Analyze
+        const an = await fetch('/api/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(uploadData)
+            body: JSON.stringify(upData)
         });
-        if (!analyzeRes.ok) throw new Error('Inference engine timeout');
         
-        state.results = await analyzeRes.json();
-        
+        state.results = await an.json();
         clearInterval(interval);
         progress.style.width = '100%';
-        
-        setTimeout(() => {
-            renderInference();
-            loading.style.display = 'none';
-            results.style.display = 'block';
-            btn.style.display = 'block';
-            
-            window.scrollTo({
-                top: results.offsetTop - 120,
-                behavior: 'smooth'
-            });
-        }, 500);
 
-    } catch (err) {
+        setTimeout(() => {
+            loading.style.display = 'none';
+            workspace.style.display = 'none';
+            resultsArea.style.display = 'block';
+            document.getElementById('resetBtn').style.display = 'flex';
+            
+            renderInference();
+            
+            window.scrollTo({ top: resultsArea.offsetTop - 120, behavior: 'smooth' });
+        }, 400);
+
+    } catch (e) {
         clearInterval(interval);
-        alert('System Exception: ' + err.message);
+        alert('Engine Timeout: ' + e.message);
         loading.style.display = 'none';
         btn.style.display = 'block';
+        workspace.style.opacity = '1';
     }
 }
 
 function renderInference() {
-    const r = state.results;
+    renderCandidateList();
+    renderSignalChart();
+    renderSummary();
+    renderMatrix();
     
-    // Summary
-    const avg = r.candidates.length > 0 ? Math.round(r.candidates.reduce((a, b) => a + b.score, 0) / r.candidates.length) : 0;
-    document.getElementById('summaryGrid').innerHTML = `
-        <div class="about-card"><h4>PROCESS</h4><div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${r.total_resumes}</div><p>Artifacts</p></div>
-        <div class="about-card"><h4>MATCH</h4><div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${r.candidates.length > 0 ? r.candidates[0].score : 0}%</div><p>Max Fit</p></div>
-        <div class="about-card"><h4>SIGNAL</h4><div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${avg}%</div><p>Avg Quality</p></div>
-        <div class="about-card"><h4>STATUS</h4><div style="font-size: 2rem; font-weight: 800; color: var(--primary);">ACTIVE</div><p>Real-time</p></div>
-    `;
+    // Sidebar Sidebar
+    const side = document.getElementById('jdSideContent');
+    const jd = state.results.jd_details;
+    if (state.mode === 'recruiter') {
+        side.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-muted);">ROLES</label>
+                <div style="font-weight: 700;">${jd.titles.join(', ') || 'N/A'}</div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-muted);">EXP</label>
+                <div style="font-weight: 700;">${jd.experience || 'Not Defined'}</div>
+            </div>
+            <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
+                <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-muted);">KEY SKILL TAGS</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                    ${[].concat(...Object.values(jd.skills)).slice(0, 10).map(s => `<span class="tag tag-match">${s}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    } else {
+        side.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted);">Individual Profiling active. No mandate comparison.</p>`;
+    }
+}
 
-    // JD Breakdown
-    const jd = r.jd_details;
-    document.getElementById('jdDetailsGrid').innerHTML = `
-        <div><label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">ROLES</label><div>${jd.titles.join(', ') || 'General'}</div></div>
-        <div><label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">EXP_REQ</label><div>${jd.experience || 'Flexible'}</div></div>
-        <div><label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">ACADEMICS</label><div>${jd.education[0] || 'Any'}</div></div>
-    `;
+function renderCandidateList() {
+    const list = document.getElementById('candidateList');
+    const candidates = [...state.results.candidates].sort((a,b) => {
+        return state.sortOrder === 'desc' ? b.score - a.score : a.score - b.score;
+    });
 
-    // Candidate List
-    document.getElementById('candidateList').innerHTML = r.candidates.map((c, i) => `
-        <div class="result-card animate" style="animation-delay: ${i * 0.1}s">
-            <div class="score-text">${c.score}%</div>
-            <h4>${c.name}</h4>
+    list.innerHTML = candidates.map((c, i) => `
+        <div class="result-card animate" style="animation-delay: ${i*0.1}s">
+            ${state.mode === 'recruiter' ? `<div class="score-text">${c.score}%</div>` : ''}
+            <h3>${c.name}</h3>
             <p style="font-size: 0.8rem; color: var(--text-muted);">${c.email} &nbsp;|&nbsp; ${c.phone}</p>
-            <p style="margin: 16px 0; color: var(--primary); font-weight: 700; font-style: italic;">"${c.summary}"</p>
-            <div style="height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 20px;">
-                <div style="width: ${c.score}%; height: 100%; background: var(--primary);"></div>
+            <p style="margin: 15px 0; color: var(--primary); font-weight: 700;">"${c.summary}"</p>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div><label style="font-size: 0.6rem; color: var(--text-muted);">SIGNAL</label><div style="font-weight: 700; font-size: 0.85rem;">${c.experience}</div></div>
+                <div><label style="font-size: 0.6rem; color: var(--text-muted);">POSITION</label><div style="font-weight: 700; font-size: 0.85rem;">${c.titles[0] || 'N/A'}</div></div>
+                <div><label style="font-size: 0.6rem; color: var(--text-muted);">ACADEMICS</label><div style="font-weight: 700; font-size: 0.85rem;">${c.education[0] || 'N/A'}</div></div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; font-size: 0.8rem; margin-bottom: 20px;">
-                <div><label style="color: var(--text-muted); display: block;">SIGNAL</label>${c.experience}</div>
-                <div><label style="color: var(--text-muted); display: block;">ALIGNED</label>${c.titles[0] || 'N/A'}</div>
-                <div><label style="color: var(--text-muted); display: block;">DEGREE</label>${c.education[0] || 'N/A'}</div>
-            </div>
-            <div>
-                <label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">SYNCED_SKILLS</label>
-                <div>${c.matched_skills.map(s => `<span class="tag tag-match">${s}</span>`).join('')}</div>
-                ${c.missing_skills.length > 0 ? `<label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted); margin-top: 12px; display: block;">GAP_DETECTED</label>
-                <div>${c.missing_skills.slice(0, 5).map(s => `<span class="tag tag-miss">${s}</span>`).join('')}</div>` : ''}
+            <div style="margin-top: 20px;">
+                <div style="font-size: 0.6rem; font-weight: 800; color: var(--text-muted);">SKILLS EXTRACTED</div>
+                <div>${[].concat(...Object.values(c.skills)).slice(0, 15).map(s => `<span class="tag tag-match" style="background: var(--bg-accent); border: 1px solid var(--border); color: var(--text-main);">${s}</span>`).join('')}</div>
             </div>
         </div>
     `).join('');
+}
+
+function renderMatrix() {
+    const table = document.getElementById('matrixTable');
+    const candidates = state.results.candidates;
+    if (candidates.length === 0) return;
+
+    // Build common skills set
+    const allSkills = new Set();
+    candidates.forEach(c => {
+        [].concat(...Object.values(c.skills)).forEach(s => allSkills.add(s));
+    });
+    const skillsList = Array.from(allSkills).slice(0, 8); // Limit columns
+
+    let html = `<thead><tr><th>Candidate</th>${skillsList.map(s => `<th>${s}</th>`).join('')}<th>Score</th></tr></thead><tbody>`;
+    
+    candidates.forEach(c => {
+        const cSkills = [].concat(...Object.values(c.skills)).map(s => s.toLowerCase());
+        html += `<tr><td><b>${c.name}</b></td>`;
+        skillsList.forEach(s => {
+            const has = cSkills.includes(s.toLowerCase());
+            html += `<td style="text-align: center;">${has ? '<i class="fas fa-check" style="color: var(--primary);"></i>' : '<i class="fas fa-times" style="color: var(--text-muted); opacity: 0.3;"></i>'}</td>`;
+        });
+        html += `<td><span style="color: var(--primary); font-weight: 800;">${c.score}%</span></td></tr>`;
+    });
+    
+    html += '</tbody>';
+    table.innerHTML = html;
+}
+
+function renderSummary() {
+    // Already in existing sections, just updating count
+    document.getElementById('sortAccuracy').classList.add('active');
+}
+
+function renderSignalChart() {
+    const ctx = document.getElementById('signalsChart');
+    if (state.chart) state.chart.destroy();
+    
+    state.chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: state.results.candidates.map(c => c.name.split(' ')[0]),
+            datasets: [{
+                label: 'Match Signal',
+                data: state.results.candidates.map(c => c.score),
+                backgroundColor: '#10b981'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+function resetApp() {
+    state.resumes = [];
+    state.jd = null;
+    state.results = null;
+    document.getElementById('resumeList').innerText = '';
+    document.getElementById('jdFileName').innerText = '';
+    document.getElementById('skillsFileName').innerText = 'Attach Excel Catalog';
+    document.getElementById('uploadWorkspace').style.display = 'block';
+    document.getElementById('uploadWorkspace').style.opacity = '1';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('analyzeBtn').style.display = 'block';
+    document.getElementById('resetBtn').style.display = 'none';
+    checkBtn();
+}
+
+function setupSmoothScroll() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const t = document.querySelector(this.getAttribute('href'));
+            if (t) window.scrollTo({ top: t.offsetTop - 80, behavior: 'smooth' });
+        });
+    });
 }

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}TalentFlow AI | Analysis Intelligence{% endblock %}
+
+{% block content %}
+<section class="app-section" id="analyze" style="padding-top: 140px;">
+    <div class="dashboard-card animate" style="max-width: 1400px; margin: 0 auto;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 30px;">
+            <div>
+                <h2 style="font-size: 2.2rem; font-weight: 900; letter-spacing: -1.5px;">Intelligence Engine</h2>
+                <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <button id="recruiterMode" class="tab-btn active">Recruiter Mode (Resume + JD)</button>
+                    <button id="candidateMode" class="tab-btn">Candidate Mode (Resume Only)</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <a href="{{ url_for('home') }}" class="btn-cta" style="background: var(--bg-accent); box-shadow: none; font-size: 0.8rem; padding: 10px 20px; border: 1px solid var(--border);">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+                <button id="resetBtn" class="btn-cta" style="background: var(--bg-accent); box-shadow: none; font-size: 0.8rem; padding: 10px 20px; display: none; border: 1px solid var(--border);">
+                    <i class="fas fa-sync"></i> New Scan
+                </button>
+            </div>
+        </div>
+
+        <!-- Selection Workspace -->
+        <div id="uploadWorkspace">
+            <div class="upload-grid">
+                <div class="upload-box" id="resumeBox">
+                    <input type="file" id="resumeFiles" multiple accept=".pdf,.docx">
+                    <span class="icon">📁</span>
+                    <h3>Upload Artifacts</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">PDF or DOCX Resumes</p>
+                    <div id="resumeList" style="color: var(--primary); font-weight: 800; font-size: 0.8rem; margin-top: 10px;"></div>
+                </div>
+
+                <div class="upload-box" id="jdBoxContainer">
+                    <input type="file" id="jdFile" accept=".pdf,.docx,.txt">
+                    <span class="icon">📄</span>
+                    <h3>Target Mandate</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Job Description File</p>
+                    <div id="jdFileName" style="color: var(--primary); font-weight: 800; font-size: 0.8rem; margin-top: 10px;"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 32px; background: var(--bg-main); padding: 24px; border-radius: 20px; border: 1px solid var(--border);">
+                <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Optional Skill Catalog (XLSX)</label>
+                <div class="custom-file-input" style="margin-top: 15px;">
+                    <input type="file" id="skillsFile" accept=".xlsx" class="hidden-input">
+                    <label for="skillsFile" class="file-label">
+                        <i class="fas fa-upload"></i> <span id="skillsFileName">Attach Excel Catalog</span>
+                    </label>
+                </div>
+            </div>
+
+            <button id="analyzeBtn" style="margin-top: 32px; width: 100%;" disabled>RUN ENGINE ANALYSIS</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingSection" style="display: none; padding: 80px 0; text-align: center;">
+            <div class="icon" style="font-size: 4rem; animation: spin 2s linear infinite;">⚙️</div>
+            <h3 style="margin-top: 20px;">Aligning Talent Vectors...</h3>
+            <div style="max-width: 400px; height: 4px; background: var(--border); border-radius: 99px; margin: 30px auto; overflow: hidden;">
+                <div id="progressFill" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s;"></div>
+            </div>
+        </div>
+
+        <!-- Output Visualization -->
+        <div id="resultsSection" style="display: none; padding-top: 40px;">
+            <div style="display: flex; gap: 15px; margin-bottom: 40px;">
+                <button id="sortAccuracy" class="filter-chip active">Sort: Accuracy <i class="fas fa-sort-amount-down"></i></button>
+                <button id="toggleTable" class="filter-chip">Comparison Matrix <i class="fas fa-table"></i></button>
+                <button id="toggleCharts" class="filter-chip active">Signal Analytics <i class="fas fa-chart-line"></i></button>
+            </div>
+
+            <div id="chartsContainer" style="margin-bottom: 40px;">
+                <div class="about-card" style="padding: 30px;">
+                    <canvas id="signalsChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+
+            <div id="matrixContainer" style="display: none; margin-bottom: 40px; overflow-x: auto;" class="about-card">
+                <table id="matrixTable" style="width: 100%; border-collapse: collapse; text-align: left;"></table>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 350px; gap: 40px;">
+                <div id="candidateList"></div>
+                <div id="mandateSidebar">
+                    <div class="about-card" style="padding: 24px; position: sticky; top: 100px;">
+                        <h3 style="margin-bottom: 20px; font-size: 1rem;">Mandate Profile</h3>
+                        <div id="jdSideContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .tab-btn { background: none; border: 1px solid var(--border); padding: 8px 20px; border-radius: 99px; color: var(--text-muted); cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+    .tab-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(16, 185, 129, 0.1); }
+    
+    .filter-chip { background: var(--bg-accent); border: 1px solid var(--border); padding: 10px 20px; border-radius: 12px; color: var(--text-main); cursor: pointer; transition: 0.2s; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
+    .filter-chip.active { border-color: var(--primary); background: rgba(16, 185, 129, 0.1); }
+
+    table th, table td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+
+    .custom-file-input .hidden-input { display: none; }
+    .custom-file-input .file-label { display: block; padding: 16px 24px; background: var(--bg-accent); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; text-align: center; color: var(--text-muted); transition: 0.2s; font-size: 0.85rem; font-weight: 600; }
+    .custom-file-input .file-label:hover { border-color: var(--primary); color: var(--text-main); background: rgba(16, 185, 129, 0.05); }
+</style>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}TalentFlow AI | The Team{% endblock %}
+
+{% block content %}
+<section style="padding: 160px 8% 100px;">
+    <div class="section-head animate">
+        <h1 style="font-size: 4rem; font-weight: 900; letter-spacing: -2px;">The Visionaries</h1>
+        <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 20px auto;">Architecting the future of recruitment through artificial intelligence and systemic innovation.</p>
+    </div>
+
+    <!-- Main Leader -->
+    <div style="margin-bottom: 100px; text-align: center;" class="animate">
+        <div class="avatar-large" style="width: 180px; height: 180px; font-size: 4.5rem; background: linear-gradient(135deg, var(--primary), #06b6d4); border: 8px solid var(--bg-accent); box-shadow: 0 0 50px var(--primary-glow);">AM</div>
+        <h2 style="font-size: 3rem; margin-top: 20px; font-weight: 900;">Abhishek Maheshwari</h2>
+        <div style="background: var(--primary); color: white; display: inline-block; padding: 6px 20px; border-radius: 99px; font-weight: 800; font-size: 0.9rem; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;">Project Leader & Lead Architect</div>
+        <p style="max-width: 650px; margin: 30px auto; color: var(--text-muted); font-size: 1.1rem; line-height: 1.8;">
+            Specializing in NLP and modern web architectures to bridge the gap between technical potential and organizational efficiency. Lead developer of the TalentFlow AI ecosystem.
+        </p>
+        <div style="display: flex; gap: 25px; justify-content: center;">
+            <a href="https://github.com/Abhishek-Maheshwari-778" target="_blank" style="color: var(--text-main); font-size: 2rem; transition: 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-main)'"><i class="fab fa-github"></i></a>
+            <a href="https://www.linkedin.com/in/abhishekmaheshwari2436/" target="_blank" style="color: var(--secondary); font-size: 2rem; transition: 0.3s;" onmouseover="this.style.filter='brightness(1.5)'" onmouseout="this.style.filter='none'"><i class="fab fa-linkedin"></i></a>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 100px;">
+        <!-- Mentor -->
+        <div class="dashboard-card animate" style="padding: 40px; background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.1), transparent);">
+             <h3 style="margin-bottom: 30px; font-size: 1.1rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 15px;">Academic Mentorship</h3>
+             <div style="display: flex; gap: 30px; align-items: center;">
+                 <div style="width: 90px; height: 90px; border-radius: 24px; background: var(--bg-main); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 900; color: var(--primary); border: 2px solid var(--border);">AJ</div>
+                 <div>
+                     <h4 style="font-size: 1.6rem; font-weight: 800;">Amar Jeet</h4>
+                     <p style="color: var(--primary); font-weight: 700; font-size: 1rem; margin-top: 4px;">Senior Project Guide</p>
+                     <div style="margin-top: 15px; display: flex; gap: 15px;">
+                         <a href="https://www.linkedin.com/in/amar-jeet-977801211/" target="_blank" style="color: var(--text-muted);"><i class="fab fa-linkedin fa-lg"></i></a>
+                         <a href="https://github.com/Amarjeet9305" target="_blank" style="color: var(--text-muted);"><i class="fab fa-github fa-lg"></i></a>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+        <!-- Invertis Context -->
+        <div class="dashboard-card animate" style="padding: 40px; display: flex; flex-direction: column; justify-content: center; text-align: left;">
+             <h3 style="margin-bottom: 15px; font-size: 1.5rem; font-weight: 900;">Invertis University</h3>
+             <p style="color: var(--text-muted); font-size: 1rem;">Bachelor of Computer Applications (BCA)</p>
+             <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">Academic Session 2023 – 2026</p>
+             <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.8rem; letter-spacing: 1px; color: var(--primary); font-weight: 800;">DEPT OF COMPUTER APPLICATIONS</div>
+        </div>
+    </div>
+
+    <h3 style="text-align: center; margin-bottom: 50px; font-size: 2rem; font-weight: 900;">Core Project Team</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+        {% set members = [
+            ("Prteek Gupta", "prteekgupta", "Prteek14", "PG"),
+            ("Vaishnavi Gupta", "vaishnavi-gupta-07b05b291", "VaishVaishnavi2004", "VG"),
+            ("Samina Nooreen", "samina-nooreen-875109334", "saminanooreen29", "SN"),
+            ("Soni Gautam", "soni-gautam-b984b5293", "S0NI-gautam", "SG"),
+            ("Purti Singh", "", "purtidev", "PS"),
+            ("Anishka Bhatt", "", "anishkabhatt55-beep", "AB"),
+            ("Govind Gupta", "govind-gupta-881b53299", "Govind-gupta243", "GG"),
+            ("Khushi Gupta", "", "happycode290", "KG"),
+            ("Palak Yadav", "palak-yadav-b90850267", "pallal", "PY")
+        ] %}
+        
+        {% for name, li, gh, init in members %}
+        <div class="about-card animate" style="padding: 30px; text-align: center; border-radius: 24px;">
+            <div style="width: 60px; height: 60px; border-radius: 16px; background: var(--bg-main); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-weight: 800; font-size: 1.2rem; color: var(--text-main); border: 1px solid var(--border);">{{ init }}</div>
+            <h4 style="font-size: 1.1rem; font-weight: 800;">{{ name }}</h4>
+            <p style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">Member</p>
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                {% if li %}<a href="https://www.linkedin.com/in/{{ li }}" target="_blank" style="color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--secondary)'" onmouseout="this.style.color='var(--text-muted)'"><i class="fab fa-linkedin"></i></a>{% endif %}
+                <a href="https://github.com/{{ gh }}" target="_blank" style="color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div style="margin-top: 100px; text-align: center;">
+        <p style="font-size: 1.1rem; color: var(--text-muted); font-style: italic; max-width: 600px; margin: 0 auto;">
+            "Made an AI project using an AI, vibe coding & low-code platforms... while learning things."
+        </p>
+    </div>
+</section>
+{% endblock %}
