@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 import sys
-import pandas as pd
 from werkzeug.utils import secure_filename
 import tempfile
 import json

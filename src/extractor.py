@@ -1,25 +1,27 @@
-import spacy
 import re
-import pandas as pd
 
-# Load spaCy model
 try:
-    import en_core_web_sm
-    nlp = en_core_web_sm.load()
-except Exception:
+    import spacy
     try:
-        nlp = spacy.load("en_core_web_sm")
+        import en_core_web_sm
+        nlp = en_core_web_sm.load()
     except Exception:
-        nlp = spacy.blank("en")
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except Exception:
+            nlp = spacy.blank("en")
+except ImportError:
+    nlp = None
 
 def extract_name(text):
     """Extracts candidate name using spaCy NER and fallbacks."""
-    doc = nlp(text)
-    for ent in doc.ents:
-        if ent.label_ == "PERSON":
-            name = ent.text.split('\n')[0].strip()
-            if 2 <= len(name.split()) <= 4:
-                return name
+    if nlp is not None:
+        doc = nlp(text)
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":
+                name = ent.text.split('\n')[0].strip()
+                if 2 <= len(name.split()) <= 4:
+                    return name
     
     # Fallback: Often the first non-empty line is the name
     lines = [line.strip() for line in text.split('\n') if line.strip()]
@@ -46,30 +48,35 @@ def extract_phone(text):
 def load_skills_catalog(file_or_path):
     """Loads a skills catalog from an Excel file with columns: Category, Skill."""
     try:
-        df = pd.read_excel(file_or_path)
+        import openpyxl
+        wb = openpyxl.load_workbook(file_or_path, data_only=True)
+        sheet = wb.active
+        
+        rows = list(sheet.iter_rows(values_only=True))
+        if not rows:
+            return None
+            
+        headers = [str(cell).strip().lower() for cell in rows[0] if cell is not None]
+        cat_idx = headers.index("category") if "category" in headers else 0
+        skill_idx = headers.index("skill") if "skill" in headers else (1 if len(headers) > 1 else 0)
+        
+        catalog = {}
+        for row in rows[1:]:
+            if len(row) <= max(cat_idx, skill_idx):
+                continue
+            cat = str(row[cat_idx]).strip() if row[cat_idx] is not None else ""
+            skill = str(row[skill_idx]).strip().lower() if row[skill_idx] is not None else ""
+            if not cat or not skill:
+                continue
+            catalog.setdefault(cat, [])
+            if skill not in catalog[cat]:
+                catalog[cat].append(skill)
+        return catalog or None
+    except ImportError:
+        # Fallback to pure python csv just in case
+        return None
     except Exception:
         return None
-    cols = [c.strip().lower() for c in df.columns]
-    cat_col = None
-    skill_col = None
-    if "category" in cols:
-        cat_col = df.columns[cols.index("category")]
-    else:
-        cat_col = df.columns[0]
-    if "skill" in cols:
-        skill_col = df.columns[cols.index("skill")]
-    else:
-        skill_col = df.columns[1] if len(df.columns) > 1 else df.columns[0]
-    catalog = {}
-    for _, row in df.iterrows():
-        cat = str(row.get(cat_col, "")).strip()
-        skill = str(row.get(skill_col, "")).strip().lower()
-        if not cat or not skill:
-            continue
-        catalog.setdefault(cat, [])
-        if skill not in catalog[cat]:
-            catalog[cat].append(skill)
-    return catalog or None
 
 def extract_skills(text, categories=None):
     """Extracts skills and categorizes them."""

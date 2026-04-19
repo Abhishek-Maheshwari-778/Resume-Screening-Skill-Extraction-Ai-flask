@@ -1,6 +1,29 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import math
+import re
+from collections import Counter
 from extractor import extract_skills
+
+def compute_tf_cosine(text1, text2):
+    tokens1 = re.findall(r'\b\w+\b', text1.lower())
+    tokens2 = re.findall(r'\b\w+\b', text2.lower())
+    
+    stop_words = {'the', 'a', 'an', 'and', 'or', 'to', 'is', 'in', 'it', 'for', 'of', 'with', 'on', 'as', 'at', 'by', 'from', 'this', 'that'}
+    tokens1 = [t for t in tokens1 if t not in stop_words]
+    tokens2 = [t for t in tokens2 if t not in stop_words]
+    
+    vec1 = Counter(tokens1)
+    vec2 = Counter(tokens2)
+    
+    intersection = set(vec1.keys()) & set(vec2.keys())
+    numerator = sum([vec1[x] * vec2[x] for x in intersection])
+    
+    sum1 = sum([vec1[x]**2 for x in vec1.keys()])
+    sum2 = sum([vec2[x]**2 for x in vec2.keys()])
+    denominator = math.sqrt(sum1) * math.sqrt(sum2)
+    
+    if not denominator:
+        return 0.0
+    return float(numerator) / denominator
 
 def calculate_similarity(resume_text, job_description, catalog=None):
     """Calculates similarity score using a mix of TF-IDF and Keyword Overlap."""
@@ -8,10 +31,15 @@ def calculate_similarity(resume_text, job_description, catalog=None):
         return 0.0, []
         
     # 1. TF-IDF Cosine Similarity
-    documents = [resume_text, job_description]
-    vectorizer = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform(documents)
-    tfidf_score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+        documents = [resume_text, job_description]
+        vectorizer = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = vectorizer.fit_transform(documents)
+        tfidf_score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+    except ImportError:
+        tfidf_score = compute_tf_cosine(resume_text, job_description)
     
     # 2. Keyword Overlap (Flattening categories for comparison)
     resume_skills_dict = extract_skills(resume_text, categories=catalog)
